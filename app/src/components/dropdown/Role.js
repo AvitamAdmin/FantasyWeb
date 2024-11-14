@@ -21,15 +21,15 @@ function SelectRole({ selectedRole, setSelectedRole }) {
   };
 
   return (
-    <div className='w-full' style={{marginTop:'3vh'}}>
+    <div className='w-full' style={{ marginTop: '3vh' }}>
       <Autocomplete
         size="small"
         options={roles}
-        getOptionLabel={(option) => option.identifier || ""}
-      value={selectedRole} 
-      onChange={(event, newValue) => {
-        setSelectedRole(newValue.recordId); 
-      }}
+        getOptionLabel={(option) => option.identifier || option.name } 
+        value={roles.find(role => role.recordId === selectedRole) || null} 
+        onChange={(event, newValue) => {
+          setSelectedRole(newValue?.recordId);  {/* Set recordId as the selected value */}
+        }}
         renderInput={(params) => (
           <TextField
             {...params}

@@ -1,37 +1,33 @@
 import React, { useState } from 'react'
 import { Modal } from '@mui/material'
-import { IoClose, IoCloudUploadOutline } from "react-icons/io5";
-import { FiUpload } from "react-icons/fi";
+import { IoClose } from "react-icons/io5";
 import { useRouter } from 'next/navigation';
-import { useSelector } from 'react-redux';
-
-
+import { useDispatch } from 'react-redux';
+import { clearAllEditRecordIds } from '../../Redux/Slice/slice';
 
 const AreUSurepage = ({ isOpen, setIsModalOpen ,aresuremodal,aresuremodaltype, handleclick}) => {
-  const selectedMultipleID = useSelector(
-    (state) => state.tasks.multipleEditRecordId
-  );
-  const elementId = useSelector((state) => state.tasks.deleteElementId);
   const router = useRouter();
+  const dispatch = useDispatch();
       const closeModal = () => {
         setIsModalOpen(false);
+        dispatch(clearAllEditRecordIds());
+
       };
   return (
-    <Modal open={isOpen} onClose={closeModal}>
-          <div className='flex flex-col w-[100%] justify-center items-center  min-h-screen  '>
-          <div className='bg-gray-300 w-[30%] flex flex-col justify-center items-center  rounded-md gap-4 p-3'>
+    <Modal open={isOpen} onClose={closeModal} className="flex flex-col w-full justify-center items-center backdrop-blur-sm p-2">
+          <div className='flex flex-col w-[30%] justify-center  items-center '>
+          <div className='bg-gray-300 w-[100%] flex flex-col justify-center items-center  rounded-md gap-4 p-3'>
            <div className=' w-full flex flex-row justify-end items-end'>
-           <button className='text-end flex flex-row' onClick={closeModal}><IoClose className='text-xl'/></button>
+           <div className='text-end flex flex-row' onClick={closeModal}><IoClose className='text-xl'/></div>
            </div>
-    <div>Are You Want to {aresuremodal}</div>
-    <div className='flex flex-row w-full justify-around'>
-      <button className=' text-red-700 font-semibold w-36 rounded-md p-1' onClick={()=>{
+    <div>Are you want to {aresuremodal}</div>
+    <div className='flex flex-row w-full justify-around items-center'>
+      <div className=' text-red-700 font-semibold w-36 rounded-md p-1 cursor-pointer text-center' onClick={()=>{
         handleclick();
-        // router.push("/cheil/admin/interface");
-      }}>{aresuremodaltype}</button>
-      <button>{elementId.length}</button>
-      <button>{selectedMultipleID.length}</button>
-      <button className=' text-black font-semibold w-36 rounded-md p-1' onClick={closeModal}>Cancel</button>
+        // router.push("/fantasy/admin/interface");
+      }}>{aresuremodaltype}</div>
+    
+      <div className=' text-black font-semibold w-36 rounded-md p-1 cursor-pointer text-center' onClick={closeModal}>Cancel</div>
     </div>
            </div>
           </div>

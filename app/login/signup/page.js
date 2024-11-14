@@ -18,19 +18,29 @@ import Image from "next/image";
 import Link from "next/link";
 import SelectRole from "@/app/src/components/dropdown/Role";
 import SingleSelectSubsidiary from "@/app/src/components/dropdown/Subsidiary";
+import logo from "../../../assests/Logoblack.png";
+import MultiSelectRole from "@/app/src/components/multiSelectDropdown/MultiSelectRole";
+import toast, { Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+
 
 function Signup() {
   const [selectedSubsidiary, setSelectedSubsidiary] = useState([]);
-  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedRole, setSelectedRole] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initialload, setInitialLoad] = useState(true);
+  const router = useRouter();
   const [inputFields, setInputFields] = useState({
     username: "",
     password: "",
     referredBy: "",
     passwordConfirm: "",
-    organization: "",
+    mobilenumber: "",
+    dob:"",
+    gender: '',
+    language: '',
   });
-  const { username, password, passwordConfirm, organization, referredBy } =
+  const { username, password, passwordConfirm, mobilenumber, referredBy,dob,language,gender } =
     inputFields;
   const [token, setToken] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -63,16 +73,24 @@ function Signup() {
       setErrorMessage("Passwords do not match.");
       return;
     }
-    if (!organization) {
-      setErrorMessage("Organization is required.");
+    if (!mobilenumber) {
+      setErrorMessage("mobilenumber is required.");
+      return;
+    }
+    if (!dob) {
+      setErrorMessage("DOB is required.");
+      return;
+    }
+    if (!language) {
+      setErrorMessage("DOB is required.");
+      return;
+    }
+    if (!gender) {
+      setErrorMessage("DOB is required.");
       return;
     }
     if (!selectedRole) {
       setErrorMessage("Role is required.");
-      return;
-    }
-    if (selectedSubsidiary.length === 0) {
-      setErrorMessage("At least one subsidiary must be selected.");
       return;
     }
 
@@ -83,18 +101,33 @@ function Signup() {
 
     try {
       setLoading(true);
-      const requestData = { users: [{
-        username,
+      const requestData = { user: {
+        email:username,
         password,
         passwordConfirm,
-        organization,
+        mobileNumber:mobilenumber,
         referredBy,
-        roles: selectedRole.map((id) => ({ recordId: id })),
-        subsidiaries: selectedSubsidiary.map((id) => ({ recordId: id })),
-      }]};
+        roles: selectedRole.map(item => ({
+          recordId: item.recordId
+      })),
+        dateOfBirth:dob,
+        gender:gender,
+        language:language,
+      }};
+      console.log(requestData, "req body");
 
       const response = await axios.post(api + "/register", requestData);
       console.log(response.data, "registration response");
+      if(response.data.success == true){
+        toast.success(`User Register Successfully`,{className:"text-sm"});
+        setTimeout(() => {
+        router.push("/login");
+  
+      }, 2000);
+      }else{
+      toast.error(`User already Registred`,{className:"text-sm"});
+      }
+      
       setLoading(false);
     } catch (error) {
       console.error(error, "registration error");
@@ -110,12 +143,13 @@ function Signup() {
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
   };
-
+console.log(selectedRole,"selected selectedRole");
   return (
     <div className="flex flex-col min-h-screen justify-start lg:justify-center items-center p-1 pt-5 lg:pt-2 md:p-5">
+      <Toaster />
       <div className="mb-5 flex justify-center w-48 h-20">
-        <Image
-          src={require("../../../assests/cheil.png")}
+        <Image priority
+          src={logo}
           alt="Zero-in Logo"
         />
       </div>
@@ -189,29 +223,63 @@ function Signup() {
           </FormControl>
         </div>
 
-        <div className="flex flex-col w-full gap-3">
-          <TextField
-            value={organization}
+        <div className="flex flex-col w-full ">
+          <TextField type="number"
+            value={mobilenumber}
             onChange={(e) =>
-              setInputFields({ ...inputFields, organization: e.target.value })
+              setInputFields({ ...inputFields, mobilenumber: e.target.value })
             }
-            label="Organization"
+            label="Mobile Number"
             variant="standard"
             className="text-xs w-[100%]"
           />
         </div>
-
-        <div className="flex flex-col w-full gap-3 mt-3">
-          <SelectRole
-            selectedRole={selectedRole}
-            setSelectedRole={setSelectedRole}
+        <div className="flex flex-col w-full mt-2">
+          <TextField type="date"
+            value={dob}
+            onChange={(e) =>
+              setInputFields({ ...inputFields, dob: e.target.value })
+            }
+            variant="standard"
+            className="text-xs w-[100%]"
           />
         </div>
+        <div className="flex flex-col w-full mt-2">
+        <TextField
+          select
+          label="Gender"
+          value={gender}
+          onChange={(e) => setInputFields({ ...inputFields, gender: e.target.value })}
+          variant="standard"
+          className="text-xs w-[100%]"
+        >
+          <MenuItem value="Male">Male</MenuItem>
+          <MenuItem value="Female">Female</MenuItem>
+          <MenuItem value="Other">Other</MenuItem>
+        </TextField>
+      </div>
+      <div className="flex flex-col w-full mt-2">
+        <TextField
+          select
+          label="Select Language"
+          value={inputFields.language}
+          onChange={(e) => setInputFields({ ...inputFields, language: e.target.value })}
+          variant="standard"
+          className="text-xs w-[100%]"
+        >
+          <MenuItem value="English">English</MenuItem>
+          <MenuItem value="Spanish">Spanish</MenuItem>
+          <MenuItem value="French">French</MenuItem>
+          <MenuItem value="German">German</MenuItem>
+          <MenuItem value="Mandarin">Mandarin</MenuItem>
+        </TextField>
+      </div>
 
-        <div className="flex flex-col w-full gap-3 mt-3">
-          <SingleSelectSubsidiary
-            selectedSubsidiary={selectedSubsidiary}
-            setSelectedSubsidiary={setSelectedSubsidiary}
+        <div className="flex flex-col w-full gap-3 ">
+          <MultiSelectRole
+          initialload={initialload}
+          selectedRoles={selectedRole}
+            setSelectedRoles={setSelectedRole}
           />
         </div>
 
@@ -242,19 +310,19 @@ function Signup() {
             <div className="text-red-500 text-sm mb-2">{errorMessage}</div>
           )}
           {loading ? (
-            <button
+            <div
               onClick={handleSubmit}
               className="bg-black cursor-pointer px-5 py-3.5 w-full flex flex-row text-white rounded-md text-xl text-center justify-center"
             >
               <CircularProgress size={28} color="inherit" />
-            </button>
+            </div>
           ) : (
-            <button
+            <div
               onClick={handleSubmit}
               className="h-14 bg-black cursor-pointer px-5 py-2 text-white rounded-md text-xl text-center"
             >
               Submit
-            </button>
+            </div>
           )}
         </div>
 
@@ -270,8 +338,8 @@ function Signup() {
       </div>
 
       <div className="text-white mt-8 text-center text-sm">
-        © Cheil 2022
-        <div>Contact hybris.sup@cheil.com</div>
+        © fantasy 2022
+        <div>Contact hybris.sup@Impact11.com</div>
       </div>
     </div>
   );

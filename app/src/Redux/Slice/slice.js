@@ -8,6 +8,8 @@ const initialState = {
   selectedRole: [],
   ChooseEditOrAdd: "",
   deleteStatus: "",
+  cronExpression:"",
+  toolkitRoutePath:""
 };
 
 const userSlice = createSlice({
@@ -15,67 +17,75 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     getFilterInputValue: (state, { payload }) => {
-      // Ensure the payload is stored as an array
       state.fetchFilterInput = Array.isArray(payload) ? payload : [payload];
     },
     setMultipleEditRecoedId: (state, { payload }) => {
-      const index = state.multipleEditRecordId.indexOf(payload);
-      if (index > -1) {
-        // If the recordId is already in the array, remove it
-        state.multipleEditRecordId = state.multipleEditRecordId.filter(
-          (id) => id !== payload
-        );
+      if (Array.isArray(payload)) {
+        // If the payload is an array (e.g., Select All), replace the entire state
+        state.multipleEditRecordId = payload;
       } else {
-        // If the recordId is not in the array, add it
-        state.multipleEditRecordId.push(payload);
+        // Handle individual record selection
+        const index = state.multipleEditRecordId.indexOf(payload);
+        if (index > -1) {
+          // Remove if already selected
+          state.multipleEditRecordId = state.multipleEditRecordId.filter(
+            (id) => id !== payload
+          );
+        } else {
+          // Add if not selected
+          state.multipleEditRecordId.push(payload);
+        }
       }
     },
-    // Clear all IDs in multipleEditRecordId array
+
     clearAllEditRecordIds: (state) => {
       state.multipleEditRecordId = [];
     },
+
     getdeleteElementId: (state, { payload }) => {
       state.deleteElementId = payload;
     },
-    // Clear deleteElementId
     clearDeleteElementId: (state) => {
       state.deleteElementId = "";
     },
+
     setToken: (state, { payload }) => {
       state.token = payload;
     },
+
     setSelectedRoleId: (state, { payload }) => {
-      if (!Array.isArray(state.selectedRole)) {
-        state.selectedRole = [];
-      }
-
       const newSelectedRole = [...state.selectedRole];
-
-      // Loop through the payload to either add or remove items
       payload.forEach((item) => {
         const index = newSelectedRole.findIndex(
           (t) => t.recordId === item.recordId
         );
         if (index > -1) {
-          // If the recordId exists, remove it
           newSelectedRole.splice(index, 1);
         } else {
-          // If the recordId doesn't exist, add it
           newSelectedRole.push(item);
         }
       });
-
-      // Assign the updated array back to state, keeping all unique entries
       state.selectedRole = newSelectedRole;
     },
+
     setChooseEditOrAdd: (state, { payload }) => {
       state.ChooseEditOrAdd = payload;
     },
-    triggerDeleteSuccess: (state,) => {
-      state.deleteStatus = "deleted"; // Set to "deleted" when a delete action occurs
+
+    triggerDeleteSuccess: (state) => {
+      state.deleteStatus = "deleted";
     },
     resetDeleteStatus: (state) => {
-      state.deleteStatus = ""; // Reset to an empty string after the API call
+      state.deleteStatus = "";
+    },
+    deleteCronExpression: (state) => {
+      state.cronExpression = "";
+    },
+    getCronExpression: (state, { payload }) => {
+      state.cronExpression = payload;
+    },
+    setToolkitRoutePath: (state, { payload }) => {
+      state.toolkitRoutePath = payload;
     },
   },
 });
@@ -86,10 +96,13 @@ export const {
   setMultipleEditRecoedId,
   clearAllEditRecordIds,
   getdeleteElementId,
-  clearDeleteElementId, // Export the new action
+  clearDeleteElementId,
   setToken,
   setSelectedRoleId,
   setChooseEditOrAdd,
   triggerDeleteSuccess,
-  resetDeleteStatus
+  resetDeleteStatus,
+  getCronExpression,
+  deleteCronExpression,
+  setToolkitRoutePath
 } = userSlice.actions;

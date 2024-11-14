@@ -41,17 +41,17 @@ const ResetPassword = () => {
                     />
                 </div>
 
-                <button onClick={handlesubmit} className='w-[80%] text-sm bg-black p-2 rounded-md'>
+                <div onClick={handlesubmit} className='w-[80%] text-sm bg-black p-2 rounded-md'>
                     <div className='text-white'>Send Link</div>
-                </button>
+                </div>
 
                 <div className='text-black text-xs font-semibold'>
                     Back to <span onClick={() => router.push("/login")} className='underline cursor-pointer hover:text-gray-400'>Signin</span>
                 </div>
 
                 <div className="mt-4 gap-2 flex flex-col text-center text-xs">
-                    <div> © Cheil 2022</div>
-                    <div>Contact hybris.sup@cheil.com</div>
+                    <div> © fantasy 2022</div>
+                    <div>Contact hybris.sup@Impact11.com</div>
                 </div>
             </div>
         </div>

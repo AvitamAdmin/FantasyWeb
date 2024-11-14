@@ -178,7 +178,7 @@ const Listingpageforeppsso = ({
 
       if (response.data.message) {
         toast.success("Multiple Data deleted successfully!!");
-        // router.push(`/cheil${homeroutepath}`);
+        // router.push(`/fantasy${homeroutepath}`);
         window.location.reload();
       }
       window.location.reload();
@@ -198,13 +198,13 @@ const Listingpageforeppsso = ({
       <div className="p-1 rounded-md flex flex-row justify-between items-center w-full">
         <div className="flex flex-row gap-3 items-center">
 
-          <button
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-white gap-1 "
+          <div
+            className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-white gap-1 "
             onClick={handleExport}
           >
             <MdFileUpload className="text-gray-500 " />
             <span className="text-gray-500 text-xs">Export</span>
-          </button>
+          </div>
          
         </div>
       </div>

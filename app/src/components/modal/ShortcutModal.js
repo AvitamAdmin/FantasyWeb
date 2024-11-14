@@ -126,7 +126,7 @@ function ShortcutModal({ open, handleClose }) {
         headers,
       });
       console.log(response.data, "response from api");
-      // router.push("/cheil/admin/mapping");
+      // router.push("/fantasy/admin/mapping");
     } catch (err) {
       console.error("Error fetching mapping data", err);
     }
@@ -192,13 +192,13 @@ function ShortcutModal({ open, handleClose }) {
           className="w-full flex flex-col items-center "
         >
           <div className="bg-white w-[100%] rounded-md overflow-hidden shadow-lg animate__animated animate__fadeInDownBig">
-            <div className="flex justify-between items-center bg-black text-white p-4">
+            <div className="flex justify-between items-center bg-black text-white text-center cursor-pointer p-4">
               <h2 id="modal-title" className="text-lg font-bold">
                 Run Test
               </h2>
-              <button onClick={handleClose} className="text-xl font-bold">
+              <div onClick={handleClose} className="text-xl font-bold">
                 x
-              </button>
+              </div>
             </div>
 
             <div
@@ -308,12 +308,12 @@ function ShortcutModal({ open, handleClose }) {
                 onChange={(e) => setSkuinputField(e.target.value)} // Update the state here
               />
 
-              <button
+              <div
                 onClick={handleSaveClick}
                 className="bg-[#2b2b2b] w-full p-2 text-white rounded-md hover:bg-gray-700"
               >
                 Submit
-              </button>
+              </div>
             </div>
           </div>
         </div>

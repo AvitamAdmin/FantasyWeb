@@ -116,6 +116,8 @@ function SingleSelectSubsidiary({
   initialload = false,
   dropdownName = "Select Subsidiary", // Default value if no name is provided
 }) {
+  console.log("selectedSubsidiary fetching subsidiaries:", selectedSubsidiary);
+
   const [subsidiary, setSubsidiary] = useState([]);
   const [loading, setLoading] = useState(false);
 

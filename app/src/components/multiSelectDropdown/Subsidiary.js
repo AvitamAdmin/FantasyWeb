@@ -4,7 +4,7 @@ import axios from 'axios';
 import { api } from '@/envfile/api';
 
 function MultiSelectSubsidiary({ 
-  selectedSubsidiary, 
+    selectedSubsidiary, 
   setSelectedSubsidiary, 
   initialload = false, // Default to true
   dropdownName = "Select Subsidiaries" // Default dropdown label

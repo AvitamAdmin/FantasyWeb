@@ -1,65 +1,3 @@
-// import { api } from "@/envfile/api";
-// import { TextField } from "@mui/material";
-// import { getCookie } from "cookies-next";
-// import React, { useEffect, useState } from "react";
-// import axios from 'axios';
-
-// const MappingDropdown = ({ setMapping, mapping }) => {
-//   const [mappingList, setMappingList] = useState([]);
-//   const [selectedMapping, setSelectedMapping] = useState(mapping || ""); // Set the initial value from existing data
-
-//   useEffect(() => {
-//     const token = getCookie("jwtToken");
-//     if (token) {
-//       getInterfaceData(token);
-//     }
-//   }, []);
-
-//   const getInterfaceData = async (token) => {
-//     try {
-//       const headers = { Authorization: "Bearer " + token };
-//       const response = await axios.get(api + "/admin/mapping/get", {
-//         headers,
-//       });
-//       setMappingList(response.data.sourceTargetMappings);
-//     } catch (error) {
-//       console.log(error, "Error fetching mapping");
-//     }
-//   };
-
-//   const handleNodeChange = (value) => {
-//     setSelectedMapping(value);
-//     setMapping(value);
-//   };
-
-//   return (
-//     <div>
-//       <TextField
-//         className="text-xs w-full"
-//         style={{ marginTop: "2.5vh" }}
-//         select
-//         value={selectedMapping}
-//         SelectProps={{
-//           native: true,
-//         }}
-//         variant="standard"
-//         onChange={(e) => handleNodeChange(e.target.value)}
-//       >
-//         <option value="">Select Mapping</option>
-//         {mappingList.map((option) => (
-//           <option key={option.recordId} value={option.recordId}>
-//             {option.identifier}
-//           </option>
-//         ))}
-//       </TextField>
-//     </div>
-//   );
-// };
-
-// export default MappingDropdown;
-
-
-
 import { api } from "@/envfile/api";
 import { Autocomplete, TextField } from "@mui/material";
 import { getCookie } from "cookies-next";
@@ -74,9 +12,7 @@ const MappingDropdown = ({
 }) => {
   const [mappingList, setMappingList] = useState([]);
   const [loading, setLoading] = useState(false); // Manage loading state
-  const [selectedMapping, setSelectedMapping] = useState(
-    mappingList.find((item) => item.recordId === mapping) || null
-  ); // Set initial value if available
+  const [selectedMapping, setSelectedMapping] = useState(null); // Initial value set to null
 
   useEffect(() => {
     if (initialload) {
@@ -84,6 +20,15 @@ const MappingDropdown = ({
       if (token) getMappingData(token); // Fetch data initially if required
     }
   }, [initialload]);
+
+  useEffect(() => {
+    if (mapping && mappingList.length > 0) {
+      const existingMapping = mappingList.find((item) => item.recordId === mapping);
+      if (existingMapping) {
+        setSelectedMapping(existingMapping); // Set the value when mappingList is populated
+      }
+    }
+  }, [mapping, mappingList]); // Trigger this effect when either mapping or mappingList changes
 
   const getMappingData = async (token) => {
     setLoading(true); // Show loading indicator while fetching

@@ -11,19 +11,25 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getdeleteElementId,
   getFilterInputValue,
-  setchooesEditOrAdd,
-  setMultipleEditRecoedId,clearAllEditRecordIds,clearDeleteElementId,
-  triggerDeleteSuccess
+  setMultipleEditRecoedId,
+  clearDeleteElementId,
+  triggerDeleteSuccess,
+  clearAllEditRecordIds,
 } from "../../Redux/Slice/slice";
 import AdminEditButton from "../modal/AdminEditbutton";
+import { MdOutlineKeyboardDoubleArrowRight } from "react-icons/md";
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
+import { MdOutlineKeyboardArrowRight } from "react-icons/md";
+import { MdOutlineKeyboardDoubleArrowLeft } from "react-icons/md";
 import AreUSurepage from "../modal/AreUSurepage";
-import Upload from "../modal/upload";
 import { getCookie } from "cookies-next";
 import axios from "axios";
 import { api } from "@/envfile/api";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import UploadModal from "../modal/upload";
+import ExportDownloadModal from "../modal/ExportDownloadModal";
+import { skipmultipleedit } from "../SkipComponent/Skipmultipleedit";
 
 const Listingpage5cols = ({
   fields,
@@ -45,14 +51,15 @@ const Listingpage5cols = ({
   aresuremodaltype,
   apiroutepath,
   deleteKeyField,
-  // homeroutepath
 }) => {
   const router = useRouter();
-  const dispatch = useDispatch();
+  
   const [showInputs, setShowInputs] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isMultipleModalOpen, setIsMultipleModalOpen] = useState(false);
   const [token, setToken] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
 
@@ -69,6 +76,20 @@ const Listingpage5cols = ({
   const closeModal = () => {
     setIsModalOpen(false);
   };
+  const openMultipleModal = () => {
+    setIsMultipleModalOpen(true);
+  };
+
+  const closeMultipleModal = () => {
+    setIsMultipleModalOpen(false);
+  };
+  const openExportModal = () => {
+    setIsExportModalOpen(true);
+  };
+
+  const closeExportModal = () => {
+    setIsExportModalOpen(false);
+  };
   const [searchValues, setSearchValues] = useState(
     fields.reduce((acc, field) => {
       acc[field.value] = "";
@@ -76,7 +97,6 @@ const Listingpage5cols = ({
     }, {})
   );
 
-  // State for the edit modal
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editModalData, setEditModalData] = useState(null);
 
@@ -86,21 +106,18 @@ const Listingpage5cols = ({
     (_, index) => index + 1
   );
 
-  // Function to safely access nested fields (e.g., parentNode.identifier)
   const getFieldValue = (item, fieldPath) => {
     const value = fieldPath
       .split(".")
       .reduce((obj, key) => (obj ? obj[key] : "-"), item);
 
     if (["status", "published"].some((field) => fieldPath.includes(field))) {
-      // Convert boolean status or published to "active" or "inactive"
       return value === true ? "Active" : "Inactive";
     }
 
     return value === null || value === "" ? "-" : value;
   };
   const handleExport = () => {
-    // Prepare the worksheet data
     console.log("hii");
     const worksheetData = data.map((item) => {
       const row = {};
@@ -110,25 +127,21 @@ const Listingpage5cols = ({
       return row;
     });
 
-    // Create a worksheet and a workbook
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
 
-    // Get the range of the worksheet
     const range = XLSX.utils.decode_range(worksheet["!ref"]);
 
-    // Apply bold styling to headers
     for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C }); // Get the header cell address
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
       if (worksheet[cellAddress]) {
         worksheet[cellAddress].s = {
-          font: { bold: true }, // Apply bold font style
+          font: { bold: true },
         };
       }
     }
 
-    // Convert the workbook to binary and create a downloadable link
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
@@ -136,25 +149,21 @@ const Listingpage5cols = ({
     });
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-    // Download the file
     const downloadLink = document.createElement("a");
     downloadLink.href = URL.createObjectURL(blob);
     downloadLink.download = `${breadscrums}.xlsx`;
     downloadLink.click();
-    toast.success("File downloaded successfully")
-
+    toast.success("File downloaded successfully");
   };
 
   const handleSearchChange = (e, field) => {
     if (!e || !e.target || !field || !field.value) {
       return; // Safeguard in case e or field is undefined
     }
-  
-    // Update the search values state
+
     const newSearchValues = { ...searchValues, [field.value]: e.target.value };
     setSearchValues(newSearchValues);
-  
-    // Filter out empty fields and build the message object
+
     const message = {};
     fields.forEach((f) => {
       if (newSearchValues[f.value]?.trim()) {
@@ -163,11 +172,7 @@ const Listingpage5cols = ({
     });
     dispatch(getFilterInputValue(message));
     console.log("Updated message object for API request:", message);
-    
-    // Optional: Pass `message` to the API call or do something with it
-    // You can implement the API call or filter logic here if needed
   };
-  
 
   const filter = [
     { value: "50", sizePerPage: 50 },
@@ -189,59 +194,95 @@ const Listingpage5cols = ({
     setModalData(item); // Set the item data for the modal
     setModalOpen(true); // Open the modal
   };
+  
+  const getVisiblePages = () => {
+    let start = Math.max(0, currentPage - 2); // Shift range dynamically
+    let end = Math.min(totalPages, start + 5); // Keep 5 pages visible
 
+    // Adjust `start` if `end` reaches the last pages
+    if (end - start < 5) {
+      start = Math.max(0, end - 5);
+    }
+    return Array.from({ length: end - start }, (_, i) => start + i + 1);
+  };
+
+  const visiblePages = getVisiblePages();
   let tapTimeout = null; // Store timeout reference
   let lastTapTime = 0; // Store the last tap time to handle double taps
-  
+
   const handleTap = (item) => {
     const recordId = item.recordId;
+    // dispatch(setMultipleEditRecoedId(recordId)); 
     const DOUBLE_TAP_DELAY = 300; // Milliseconds to detect double tap
-  
+
     const now = Date.now(); // Get the current time
-  
+
     if (tapTimeout) {
       // Clear the timeout if it's a double tap
       clearTimeout(tapTimeout);
       tapTimeout = null;
     }
-  
+
     // Check if the difference between taps is less than the double tap delay
     if (now - lastTapTime < DOUBLE_TAP_DELAY) {
       // Double tap detected
       if (!selectedID.includes(recordId)) {
         dispatch(setMultipleEditRecoedId(recordId)); // Handle double tap action
       }
-  
       // Navigate to the edit route
-      router.push(`/cheil${editnewroutepath}`);
+      router.push(`/fantasy${editnewroutepath}`);
     } else {
+     
       // Single tap - set a timeout to distinguish between single and double tap
       tapTimeout = setTimeout(() => {
+        if (!selectedID.includes(recordId)) {
+          dispatch(setMultipleEditRecoedId(recordId)); // Handle double tap action
+        }
         handleOpenModal(item); // Handle single tap event
         tapTimeout = null; // Reset the timeout after handling single tap
       }, DOUBLE_TAP_DELAY);
     }
-  
+
     lastTapTime = now; // Update the last tap time
   };
-
+  const selectedID = useSelector((state) => state.tasks.multipleEditRecordId);
+  const [selectAll, setSelectAll] = useState(false); 
+  const dispatch = useDispatch();
+  
+  useEffect(() => {
+    console.log("SelectedID:", selectedID);
+    setSelectAll(selectedID.length === data.length && data.length > 0);
+  }, [selectedID, data]);
+  
+  
   const handleCheckboxClick = (recordId) => {
-    // Or you can log it to the console
-    // console.log("Record ID:", recordId);
+    console.log("Clicked RecordID:", recordId); 
     dispatch(setMultipleEditRecoedId(recordId));
   };
+  
+  const handleSelectAll = () => {
+    if (selectAll) {
+      console.log("Deselecting all ID");
+      dispatch(setMultipleEditRecoedId([])); 
+    } else {
+      const allIds = data.map((item) => item.recordId);
+      dispatch(setMultipleEditRecoedId(allIds));
+    }
+  };
+  
+  
 
-  const selectedID = useSelector((state) => state.tasks.multipleEditRecordId);
-  // console.log("Record ID by redux:", selectedID);
-  // console.log("Record ID by redux length:", selectedID.length);
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    dispatch(clearAllEditRecordIds());
 
-  const handleCloseModal = () => setModalOpen(false);
+  }
   const handleCloseEditModal = () => setEditModalOpen(false); // Close edit modal
 
   const [deleteId, setDeleteId] = useState();
   const elementId = useSelector((state) => state.tasks.deleteElementId);
 
-  const handledelete = async (deleteId) => {
+  const handledelete = async () => {
     try {
       console.log("btn triggred");
 
@@ -256,7 +297,7 @@ const Listingpage5cols = ({
         `${api}/admin/${apiroutepath}/delete`,
         body,
         {
-          headers
+          headers,
         }
       );
       // console.log(response.data);
@@ -264,12 +305,9 @@ const Listingpage5cols = ({
         closeModal();
         toast.success("Data deleted successfully!!");
         dispatch(triggerDeleteSuccess());
-        // router.push(`/cheil${homeroutepath}`);
-        // window.location.reload();
       }
     } catch (error) {
       console.error("Error deleting the record:", error);
-      // Handle the error here (e.g., show a message to the user)
     }
   };
 
@@ -277,14 +315,12 @@ const Listingpage5cols = ({
     (state) => state.tasks.multipleEditRecordId
   );
 
-
   const handlemultipledelete = async () => {
     try {
       console.log("btn triggered");
 
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Create an array of objects, each with a single recordId
       const body = {
         [deleteKeyField]: selectedMultipleID.map((id) => ({ recordId: id })),
       };
@@ -293,20 +329,18 @@ const Listingpage5cols = ({
         `${api}/admin/${apiroutepath}/delete`,
         body,
         {
-          headers
+          headers,
         }
       );
 
       if (response.data.message) {
+        closeMultipleModal();
         toast.success("Data deleted successfully!!");
         dispatch(triggerDeleteSuccess());
         dispatch(clearDeleteElementId());
-        // router.push(`/cheil${homeroutepath}`);
-        // window.location.reload();
       }
     } catch (error) {
       console.error("Error deleting the record:", error);
-      // Handle the error here (e.g., show a message to the user)
     }
   };
 
@@ -323,7 +357,7 @@ const Listingpage5cols = ({
 
       const fullUrl = `${api}${fileName}`;
       window.open(fullUrl, "_blank");
-      toast.success("File downloaded successfully")
+      toast.success("File downloaded successfully");
     } catch (err) {
       setError("Error fetching export URL");
     }
@@ -338,137 +372,244 @@ const Listingpage5cols = ({
             <span className="text-xs font-bold">{breadscrums}</span>
           </div>
           <div>
-            {totalPages > 0 && (
-              <div className="flex space-x-3 bg-[#D3D3D3] justify-start items-center p-2 rounded-md">
-                {pageNumbers.map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    className={`w-[25px] py-0.5 rounded ${
-                      pageNum - 1 === currentPage
-                        ? "bg-[#cc0001] text-white"
-                        : "bg-white text-gray-700"
-                    } text-sm`}
-                    onClick={() => onPageChange(pageNum - 1)}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-              </div>
-            )}
+          {totalPages > 0 && (
+        <div className="flex space-x-3 bg-[#D3D3D3] justify-start items-center p-2 rounded-md">
+          {/* Double arrow button to go to the first page */}
+          <div
+            onClick={() => onPageChange(0)}
+            disabled={currentPage === 0}
+            className="w-[25px] py-0.5 rounded bg-white items-center text-center cursor-pointer justify-center flex flex-row text-gray-700 text-sm"
+          >
+           <MdOutlineKeyboardDoubleArrowLeft className="text-lg"/>
+
+          </div>
+
+          {/* Single arrow button to go to the previous page */}
+          <div
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 0}
+            className="w-[25px] py-0.5 rounded bg-white items-center text-center cursor-pointer justify-center flex flex-row text-gray-700 text-sm"
+          >
+           <MdOutlineKeyboardArrowLeft className="text-lg"/>
+
+          </div>
+
+          {/* Render visible page numbers dynamically */}
+          {visiblePages.map((pageNum) => (
+            <div
+              key={pageNum}
+              className={`w-[25px] py-0.5 rounded ${
+                pageNum - 1 === currentPage
+                  ? "bg-[#cc0001] text-white text-center cursor-pointer"
+                  : "bg-white text-gray-700 text-center cursor-pointer"
+              } text-sm`}
+              onClick={() => onPageChange(pageNum - 1)}
+            >
+              {pageNum}
+            </div>
+          ))}
+
+          {/* Single arrow button to go to the next page */}
+          <div
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages - 1}
+            className="w-[25px] py-0.5 rounded bg-white text-center cursor-pointer items-center justify-center flex flex-row text-gray-700 text-sm"
+          >
+            <MdOutlineKeyboardArrowRight className="text-lg"/>
+
+          </div>
+
+          {/* Double arrow button to go to the last page */}
+          <div
+            onClick={() => onPageChange(totalPages - 1)}
+            disabled={currentPage === totalPages - 1}
+            className="w-[25px] py-0.5 rounded bg-white text-center cursor-pointer items-center justify-center flex flex-row text-gray-700 text-sm"
+          >
+            <MdOutlineKeyboardDoubleArrowRight className="text-lg"/>
+
           </div>
         </div>
+      )}
+</div>
+        </div>
         <div className="flex flex-row gap-3 items-center">
-          <div className="flex flex-row">
-            {selectedID.length >= 1 ? (
-              <button
-                onClick={() => {
-                  router.push(`/cheil${editnewroutepath}`);
-                }}
-              >
-                <Tooltip
-                  arrow
-                  slotProps={{
-                    popper: {
-                      modifiers: [
-                        {
-                          name: "offset",
-                          options: {
-                            offset: [0, -14],
-                          },
-                        },
-                      ],
-                    },
-                  }}
-                  title="Edit"
-                >
-                  <IconButton>
-                    <MdOutlineEdit className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl " />
-                  </IconButton>
-                </Tooltip>
-              </button>
-            ) : (
-              <div
-                onClick={() => {
-                  toast.error("Atleast select one Element to edit");
-                }}
-              >
-                <Tooltip
-                  arrow
-                  slotProps={{
-                    popper: {
-                      modifiers: [
-                        {
-                          name: "offset",
-                          options: {
-                            offset: [0, -14],
-                          },
-                        },
-                      ],
-                    },
-                  }}
-                  title="Edit"
-                >
-                  <IconButton>
-                    <MdOutlineEdit className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl " />
-                  </IconButton>
-                </Tooltip>
-              </div>
-            )}
-            <button onClick={handlemultipledelete}>
-              <Tooltip
-                arrow
-                slotProps={{
-                  popper: {
-                    modifiers: [
-                      {
-                        name: "offset",
-                        options: {
-                          offset: [0, -14],
-                        },
-                      },
-                    ],
+        <div className="flex flex-row">
+        { 
+  !skipmultipleedit.includes(apiroutepath) ? (
+    // If not in skipmultipleedit, enable the edit button and check for selected items
+    selectedID.length >= 1 ? (
+      <div
+        onClick={() => {
+          router.push(`/fantasy${editnewroutepath}`);
+        }}
+      >
+        <Tooltip
+          arrow
+          slotProps={{
+            popper: {
+              modifiers: [
+                {
+                  name: "offset",
+                  options: {
+                    offset: [0, -14],
                   },
-                }}
-                title="Delete"
-              >
-                <IconButton>
-                  <MdDelete className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl " />
-                </IconButton>
-              </Tooltip>
-            </button>
+                },
+              ],
+            },
+          }}
+          title="Edit"
+        >
+          <IconButton>
+            <MdOutlineEdit className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl " />
+          </IconButton>
+        </Tooltip>
+      </div>
+    ) : (
+      <div
+        onClick={() => {
+          toast.error("At least select one element to edit");
+        }}
+      >
+        <Tooltip
+          arrow
+          slotProps={{
+            popper: {
+              modifiers: [
+                {
+                  name: "offset",
+                  options: {
+                    offset: [0, -14],
+                  },
+                },
+              ],
+            },
+          }}
+          title="Edit"
+        >
+          <IconButton>
+            <MdOutlineEdit className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl " />
+          </IconButton>
+        </Tooltip>
+      </div>
+    )
+  ) : (
+    // If apiroutepath is in skipmultipleedit, show a disabled button
+    <Tooltip
+      arrow
+      slotProps={{
+        popper: {
+          modifiers: [
+            {
+              name: "offset",
+              options: {
+                offset: [0, -14],
+              },
+            },
+          ],
+        },
+      }}
+      title="Multiple edit is disabled for this path"
+    >
+      <span>
+        <IconButton disabled>
+          <MdOutlineEdit className="text-white bg-gray-400 p-1.5 rounded-md text-3xl " />
+        </IconButton>
+      </span>
+    </Tooltip>
+  )
+}
+
+            {selectedMultipleID.length >= 1 ? (
+  <div
+    onClick={() => {
+      openMultipleModal(); // Open the delete confirmation modal
+    }}
+  >
+    <Tooltip
+      arrow
+      slotProps={{
+        popper: {
+          modifiers: [
+            {
+              name: "offset",
+              options: {
+                offset: [0, -14], // Adjust tooltip position
+              },
+            },
+          ],
+        },
+      }}
+      title="Delete"
+    >
+      <IconButton>
+        <MdDelete className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl" />
+      </IconButton>
+    </Tooltip>
+  </div>
+) : (
+  <div
+    onClick={() => {
+      toast.error("At least select one element to delete"); // Show error if no item is selected
+    }}
+  >
+    <Tooltip
+      arrow
+      slotProps={{
+        popper: {
+          modifiers: [
+            {
+              name: "offset",
+              options: {
+                offset: [0, -14], // Adjust tooltip position
+              },
+            },
+          ],
+        },
+      }}
+      title="Delete"
+    >
+      <IconButton>
+        <MdDelete className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl" />
+      </IconButton>
+    </Tooltip>
+  </div>
+)}
+
           </div>
-          <button
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-white gap-1"
-            onClick={handleExport}
+          <div
+            className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-white gap-1"
+            onClick={()=>{
+              openExportModal();
+            }}
           >
             <MdFileUpload className="text-gray-500 " />
             <span className="text-gray-500 text-xs">Export</span>
-          </button>
-          <button
+          </div>
+          <div
             onClick={() => {
-              router.push(`/cheil${addnewroutepath}`);
+              router.push(`/fantasy${addnewroutepath}`);
             }}
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-[#CC0001] gap-1"
+            className="flex flex-row p-2 text-center cursor-pointer items-center rounded-md bg-[#CC0001] gap-1"
           >
             <FaPlus className="text-white" />
             <span className="text-white text-xs">Add New</span>
-          </button>
+          </div>
 
-          <button
+          <div
             onClick={handleDownload}
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-[#2b2b2b] gap-1"
+            className="flex flex-row p-2 text-center cursor-pointer items-center rounded-md bg-[#2b2b2b] gap-1"
           >
             <span className="text-white text-xs">Template</span>
-          </button>
-          <button
-            onClick={()=>{
-              setShowUploadModal(true)
+          </div>
+          <div
+            onClick={() => {
+              setShowUploadModal(true);
             }}
-            // href="/cheil/admin/trgmapping/add-mapping"
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-[#2b2b2b] gap-1"
+            // href="/fantasy/admin/trgmapping/add-mapping"
+            className="flex flex-row p-2 text-center cursor-pointer items-center rounded-md bg-[#2b2b2b] gap-1"
           >
             <span className="text-white text-xs">Upload</span>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -477,30 +618,36 @@ const Listingpage5cols = ({
         <div className="gap-3 flex flex-col  rounded-md   overflow-y-auto">
           <div
             style={{ backgroundColor: "#D3D3D3" }}
-            className=" rounded-md shadow pl-4 pr-4"
+            className=" rounded-md shadow w-full pl-4 pr-4"
           >
-            <div className="flex items-center flex-row">
+            <div className="flex items-center w-full flex-row">
               <div className="flex flex-row w-full">
-                <div className="flex items-center gap-2 text-sm w-20">
-                  <input type="checkbox" />
-                </div>
+              <div className="flex items-center gap-2 text-sm w-[5%]">
+              <input
+        type="checkbox"
+        checked={selectAll}
+        onChange={handleSelectAll}
+      />{' '}
+        {/* <span>Select All</span> */}
+      </div>
+
                 {!showInputs ? (
-                  <div className="w-full flex flex-row justify-between items-center pt-2.5 pb-2.5">
+                  <div className="w-[85%] flex flex-row  justify-between items-center pt-2.5 pb-2.5">
                     {fields.map((field, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 p-1 text-sm w-[30%] "
+                        className="flex  items-center gap-2  p-1 text-sm w-[15%] "
                       >
                         <span>{field.label}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-row w-full justify-between items-start pt-2.5 pb-2.5">
+                  <div className="flex flex-row w-full  justify-between  items-start pt-2.5 pb-2.5">
                     {fields.map((field, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 text-sm w-[30%]"
+                        className="flex  items-center gap-2  text-sm w-[20%]"
                       >
                         <input
                           key={index}
@@ -513,7 +660,7 @@ const Listingpage5cols = ({
                     ))}
                   </div>
                 )}
-                <div className="flex flex-row items-center justify-end  gap-2 text-sm w-[10%]">
+                <div className="flex flex-row items-center justify-end  gap-2 text-sm w-[5%]">
                   {showInputs ? (
                     <IoClose
                       className="cursor-pointer"
@@ -544,67 +691,73 @@ const Listingpage5cols = ({
               </div>
             ) : (
               <div className="space-y-2 max-w-[100%]">
-  {data.length < 1 ? (
-    <div className="text-center text-gray-500 text-sm">
-      No data found
-    </div>
-  ) : (
-    data.map((item, index) => (
-      <div key={index} className="flex items-center text-gray-600 text-xs w-full ">
-        <div className="flex items-center gap-2 text-sm w-[5%]">
-          <input
-            checked={selectedID.includes(item.recordId)}
-            type="checkbox"
-            onChange={(e) => handleCheckboxClick(item.recordId)}
-          />
-        </div>
-        <div
-          className="flex w-[90%] justify-between cursor-pointer"
-          onClick={() => handleTap(item)}
-        >
-          {fields.map((field, idx) => (
-            <div
-              key={idx}
-              className="flex text-center  flex-row w-[25%] overflow-hidden text-ellipsis whitespace-nowrap"
-            >
-              <span>{getFieldValue(item, field.value)}</span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={() => {
-            dispatch(getdeleteElementId(item.recordId));
-            openModal();
-          }}
-          className="gap-3 flex flex-row "
-        >
-          <Tooltip
-            arrow
-            placement="right-start"
-            slotProps={{
-              popper: {
-                modifiers: [
-                  {
-                    name: "offset",
-                    options: {
-                      offset: [0, -14],
-                    },
-                  },
-                ],
-              },
-            }}
-            title="Delete"
-          >
-            <IconButton>
-              <MdDelete className="text-black   rounded-md text-xl " />
-            </IconButton>
-          </Tooltip>
-        </button>
-      </div>
-    ))
-  )}
-</div>
+                {data.length < 1 ? (
+                  <div className="text-center text-gray-500 text-sm">
+                    No data found
+                  </div>
+                ) : (
+                  data.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center   text-gray-600 text-xs w-full "
+                    >
+                               <div className="flex items-center gap-2 text-sm w-[5%]">
+                               <input
+              type="checkbox"
+              checked={selectedID.includes(item.recordId)}
+              onChange={() => handleCheckboxClick(item.recordId)}
+            />
+          </div>
 
+
+                      <div
+                        className="flex w-[90%] gap-5  justify-between cursor-pointer"
+                        onClick={() => {handleTap(item);
+                          // dispatch(setMultipleEditRecoedId(item.recordId)); 
+                        }}
+                      >
+                        {fields.map((field, idx) => (
+                          <div
+                            key={idx}
+                            className="flex text-center  pl-1 flex-row w-[31%] overflow-hidden text-ellipsis whitespace-nowrap"
+                          >
+                            <span>{getFieldValue(item, field.value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div
+                        onClick={() => {
+                          dispatch(getdeleteElementId(item.recordId));
+                          openModal();
+                        }}
+                        className="gap-3 w-[5%] flex flex-row "
+                      >
+                        <Tooltip
+                          arrow
+                          placement="right-start"
+                          slotProps={{
+                            popper: {
+                              modifiers: [
+                                {
+                                  name: "offset",
+                                  options: {
+                                    offset: [0, -14],
+                                  },
+                                },
+                              ],
+                            },
+                          }}
+                          title="Delete"
+                        >
+                          <IconButton>
+                            <MdDelete className="text-black   rounded-md text-xl " />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -614,6 +767,7 @@ const Listingpage5cols = ({
           handleClose={handleCloseModal}
           data={modalData}
           cuurentpagemodelname={cuurentpagemodelname}
+          editnewroutepath={editnewroutepath}
         />
 
         <AdminEditButton
@@ -662,17 +816,6 @@ const Listingpage5cols = ({
           </TextField>
         </div>
 
-        {/* <div className="flex space-x-3">
-            {pageNumbers.map((pageNum) => (
-              <button
-                key={pageNum}
-                className={`px-3 py-1 rounded ${pageNum - 1 === currentPage ? 'bg-[#cc0001] text-white' : ' text-gray-700'}`}
-                onClick={() => onPageChange(pageNum - 1)}
-              >
-                {pageNum}
-              </button>
-            ))}
-          </div> */}
         <AreUSurepage
           handleclick={handledelete}
           aresuremodaltype={aresuremodaltype}
@@ -680,11 +823,23 @@ const Listingpage5cols = ({
           isOpen={isModalOpen}
           setIsModalOpen={setIsModalOpen}
         />
-
-<UploadModal
-         routepath={apiroutepath}
-         isOpen={showUploadModal}
-         setIsModalOpen={setShowUploadModal}
+         <AreUSurepage
+          handleclick={handlemultipledelete}
+          aresuremodaltype={aresuremodaltype}
+          aresuremodal={aresuremodal}
+          isOpen={isMultipleModalOpen}
+          setIsModalOpen={setIsMultipleModalOpen}
+        />
+        <ExportDownloadModal
+          // handleclick={handleclick}
+          handleClose={closeExportModal}
+          isOpen={isExportModalOpen}
+          setIsModalOpen={setIsExportModalOpen}
+        />
+        <UploadModal
+          routepath={apiroutepath}
+          isOpen={showUploadModal}
+          setIsModalOpen={setShowUploadModal}
         />
       </div>
     </div>

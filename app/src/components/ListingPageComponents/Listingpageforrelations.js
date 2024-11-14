@@ -187,7 +187,7 @@ const Listingpageforrelation = ({
 
       if (response.data.message) {
         toast.success("Multiple Data deleted successfully!!");
-        // router.push(`/cheil${homeroutepath}`);
+        // router.push(`/fantasy${homeroutepath}`);
         window.location.reload();
       }
       window.location.reload();
@@ -208,7 +208,7 @@ const Listingpageforrelation = ({
         <div className="flex flex-row gap-3 items-center">
           <div className="flex flex-row">
             
-            <button onClick={handlemultipledelete}>
+            <div onClick={handlemultipledelete}>
               <Tooltip
                 arrow
                 slotProps={{
@@ -229,24 +229,24 @@ const Listingpageforrelation = ({
                   <MdDelete className="text-white bg-[#CC0001] p-1.5 rounded-md text-3xl " />
                 </IconButton>
               </Tooltip>
-            </button>
+            </div>
           </div>
-          <button
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-white gap-1"
+          <div
+            className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-white gap-1"
             onClick={handleExport}
           >
             <MdFileUpload className="text-gray-500 " />
             <span className="text-gray-500 text-xs">Export</span>
-          </button>
-          <button
+          </div>
+          <div
             onClick={() => {
-              router.push(`/cheil${addnewroutepath}`);
+              router.push(`/fantasy${addnewroutepath}`);
             }}
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-[#CC0001] gap-1"
+            className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-[#CC0001] gap-1"
           >
             <FaPlus className="text-white" />
             <span className="text-white text-xs">Add New</span>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -347,7 +347,7 @@ const Listingpageforrelation = ({
                         </div>
                       ))}
                     </div>
-                    <button
+                    <div
                       onClick={() => {
                         dispatch(getdeleteElementId(item.recordId));
                         openModal();
@@ -375,7 +375,7 @@ const Listingpageforrelation = ({
                           <MdDelete className="text-black   rounded-md text-xl " />
                         </IconButton>
                       </Tooltip>
-                    </button>
+                    </div>
                   </div>
                 ))}
               </div>

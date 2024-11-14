@@ -69,22 +69,29 @@ import axios from "axios";
 
 const SitesDropdown = ({
   setSites,
-  sites,
+  sites, // Prop containing the current selected site
   initialload = false, // Default to false
   dropdownName = "Select Site", // Customizable label
 }) => {
   const [sitesList, setSitesList] = useState([]);
-  const [selectedSites, setSelectedSites] = useState(
-    sitesList.find((site) => site.recordId === sites) || null
-  );
+  const [selectedSites, setSelectedSites] = useState(null); // Initially null
   const [loading, setLoading] = useState(false); // Manage loading state
 
+  // Fetch sites data initially or when the dropdown is opened
   useEffect(() => {
     if (initialload) {
       const token = getCookie("jwtToken");
       if (token) getSitesData(token); // Fetch data initially if required
     }
   }, [initialload]);
+
+  // Update selected site after sites list is fetched
+  useEffect(() => {
+    if (sitesList.length > 0 && sites) {
+      const selectedSite = sitesList.find((site) => site.recordId === sites);
+      setSelectedSites(selectedSite || null);
+    }
+  }, [sitesList, sites]); // Run this effect when sitesList or sites prop changes
 
   const getSitesData = async (token) => {
     setLoading(true); // Show loading indicator
@@ -110,7 +117,7 @@ const SitesDropdown = ({
         className="text-xs w-full"
         options={sitesList}
         getOptionLabel={(option) => option.identifier || ""}
-        value={selectedSites}
+        value={selectedSites} // Set value to selected site
         onChange={(event, newValue) => handleNodeChange(newValue)}
         onOpen={() => {
           if (!initialload && sitesList.length === 0) {
@@ -145,3 +152,4 @@ const SitesDropdown = ({
 };
 
 export default SitesDropdown;
+

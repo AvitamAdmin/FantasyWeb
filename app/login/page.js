@@ -19,6 +19,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { useDispatch } from "react-redux";
 import { setToken } from "../src/Redux/Slice/slice";
+import logo from "../../assests/Logoblack.png";
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -42,13 +43,23 @@ function Login() {
       router.push("/login");
     } else {
       dispatch(setToken(token));
-      router.push("/cheil");
+      router.push("/fantasy");
     }
   }, [router]);
 
-  const handlesubmit = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-
+    // toast((t) => (
+    //   <span>
+    //     Custom and <b>bold</b>
+    //     <div onClick={() => toast.dismiss(t.id)} style={{ marginLeft: '10px' }}>
+    //       Dismiss
+    //     </div>
+    //   </span>
+    // ), {
+    //   duration: 10000, // Set duration to 5 seconds (5000ms)
+    // });
+    
     if (!username) {
       setErrorMessage("Username is required.");
       return;
@@ -60,30 +71,55 @@ function Login() {
     }
 
     try {
-      console.log(inputFields,"login credentials");
+      console.log({ username, password }, "login credentials");
       setLoading(true);
+      
+      // Login API call
       const response = await axios.post(api + "/api/authenticate", {
         username,
         password,
       });
+      console.log(response.data,"response from backend");
 
-      if (response.data.jwtToken) {
-        localStorage.setItem("username", username);
-        setCookie("jwtToken", response.data.jwtToken);
-        router.push("/cheil");
-        setLoading(false);
-      } else {
-        setErrorMessage("User not found check your credentials");
-      }
-      if (response.data) {
-       
-        setLoading(false);
-      } else {
-        setErrorMessage("User not found check your credentials");
+      if (response.data.jwtToken == "Error")   {
+        toast.error("Invalid credentials.");
+      }else{
+        const token = response.data.jwtToken;
+console.log(response.data,"response from backend");
+        // Store token in localStorage and cookies
+        localStorage.setItem('jwtToken', token);
+        localStorage.setItem('username', username);
+        setCookie("jwtToken", token);
+      toast.success("Login successfully");
+
+        // Fetch menu data immediately after login
+        await fetchMenuData(token);
+
+        // Redirect to /fantasy on success
+        router.push("/fantasy");
       }
     } catch (error) {
       console.log(error, "user login error");
-      toast.error("An error occurred. Please try again.");
+      toast.error("User login error. Please try again.");
+    } finally {
+      setLoading(false); // Ensure loading state is reset
+    }
+  };
+
+  // Fetch menu data after successful login
+  const fetchMenuData = async (token) => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const response = await axios.get(api + '/admin/interface/getMenu', { headers });
+
+      if (response.data) {
+        // Store menu data in localStorage
+        localStorage.setItem('menuData', JSON.stringify(response.data));
+        console.log("Menu data stored:", response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching menu data:", error);
+      toast.error("Failed to load menu data.");
     }
   };
 
@@ -93,8 +129,9 @@ function Login() {
         className="bg-white flex flex-col min-h-screen justify-start lg:justify-center items-center p-1 pt-5 lg:pt-0 md:p-5"
         style={{ fontFamily: "SamsungOne, sans-serif" }}
       >
-        <div className="mb-5 flex justify-center w-48 h-20">
-          <Image src={require("../../assests/cheil.png")} alt="Zero-in Logo" />
+        <Toaster />
+        <div className="mb-5 flex justify-center  ">
+          <Image src={logo} alt="Zero-in Logo" className="w-48 h-20"/>
         </div>
 
         <div className="flex flex-col gap-3 w-[100%] md:w-[70%] lg:w-[30%] justify-center items-center rounded-lg p-8">
@@ -152,19 +189,19 @@ function Login() {
               <div className="text-red-500 text-sm mb-2">{errorMessage}</div>
             )}
             {loading ? (
-              <button
-                onClick={handlesubmit}
+              <div
+                // onClick={handleSubmit}
                 className="bg-black cursor-pointer px-5 py-2 w-full flex flex-row text-white rounded-md text-xl text-center justify-center"
               >
                 <CircularProgress size={28} color="inherit" />
-              </button>
+              </div>
             ) : (
-              <button
-                onClick={handlesubmit}
+              <div
+                onClick={handleSubmit}
                 className="bg-black cursor-pointer px-5 py-2 w-full flex flex-row text-white rounded-md text-xl text-center justify-center"
               >
                 Login
-              </button>
+              </div>
             )}
           </div>
 
@@ -193,8 +230,8 @@ function Login() {
           </div>
 
           <div className="mt-4 text-center text-sm">
-            © Cheil 2022
-            <div>Contact hybris.sup@cheil.com</div>
+            © Impact11 2022
+            <div>Contact hybris.sup@Impact11.com</div>
           </div>
         </div>
       </div>

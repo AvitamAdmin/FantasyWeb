@@ -7,6 +7,10 @@ import { MdOutlineArrowDropDown, MdOutlineArrowDropUp } from 'react-icons/md';
 import axios from 'axios';
 import { api } from '@/envfile/api';
 import { getCookie } from 'cookies-next';
+import toast, { Toaster } from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { setToolkitRoutePath } from '../src/Redux/Slice/slice';
+import logo from "../../assests/logo.png";
 
 const Sidebar = () => {
   const router = useRouter();
@@ -26,10 +30,11 @@ const Sidebar = () => {
   
   // Call fetchMenuData only when token is set
   useEffect(() => {
-    if (token) {
-      fetchMenuData();
+    const storedData = localStorage.getItem('menuData');
+    if (storedData) {
+      setMenuData(JSON.parse(storedData));
     }
-  }, [token]);
+  }, []);
   
   // Fetch Menu Data from API
   const fetchMenuData = async () => {
@@ -44,19 +49,46 @@ const Sidebar = () => {
   
 
   const toggleParent = (parentId) => {
-    setActiveParent(activeParent === parentId ? null : parentId);
+    if (activeParent === parentId) {
+      // If the clicked parent is already active, close it
+      setActiveParent(null);
+    } else {
+      // Otherwise, set the clicked parent as active and close others
+      setActiveParent(parentId);
+    }
+    // setActiveParent(activeParent === parentId ? null : parentId);
   };
+  const dispatch = useDispatch();
 
   const handleChildClick = (path, childId) => {
+    if (path.includes("toolkit")) {
+      // Extract the part after "toolkit/"
+      const extractedPath = path.split("toolkit/")[1];
+      dispatch(setToolkitRoutePath(extractedPath));
+  
+      console.log("extractedPath file redirected",extractedPath);
+      toast.success(`Dropdown toolkit/${extractedPath} has been selected`,{className:"text-xs"});
+      
+      // Redirect to the reports path
+      router.push(`/fantasy/toolkit/reports`);
+    } else {
+      router.push(`/fantasy/${path}`);
+    }
+  
+    console.log(`/fantasy/${path}`);
     setActiveChild(childId);
-    router.push(`/cheil/${path}`);
   };
+  
+  
 
   return (
     <div className="hidden lg:flex min-w-[15%]" style={{ fontFamily: 'SamsungOne, sans-serif' }}>
+      <Toaster />
 <div className="bg-black text-white w-full h-screen overflow-y-scroll flex flex-col flex-shrink-0">
-<div className="p-5 flex items-center justify-center">
-          <Image src={require("../../assests/logo.png")} alt="Logo" width={150} height={60} />
+<div onClick={()=>{
+   router.push(`/fantasy`);
+}} className="p-5 flex items-center justify-center cursor-pointer">
+          <Image src={logo} alt="Logo" width={150} height={60} priority />
         </div>
         <div className='p-2 gap-3 flex flex-col w-full'>
           {menuData.map((parentNode, parentId) => (

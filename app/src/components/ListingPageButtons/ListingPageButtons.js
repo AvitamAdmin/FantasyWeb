@@ -65,26 +65,26 @@ function ListingPageButtons({
               alt="Delete"
             />
           </div>
-          <Link className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-white gap-1">
+          <Link className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-white gap-1">
             <MdFileUpload className="text-gray-500" />
             <span className="text-gray-500 text-xs">Export</span>
           </Link>
           <Link
-            href="/cheil/admin/toolkitCronjobs"
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-[#CC0001] gap-1"
+            href="/fantasy/admin/toolkitCronjobs"
+            className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-[#CC0001] gap-1"
           >
             <FaPlus className="text-white" />
             <span className="text-white text-xs">Add New</span>
           </Link>
           <Link
-            // href="/cheil/admin/trgmapping/add-mapping"
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-[#2b2b2b] gap-1"
+            // href="/fantasy/admin/trgmapping/add-mapping"
+            className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-[#2b2b2b] gap-1"
           >
             <span className="text-white text-xs">Template</span>
           </Link>
           <Link
-            // href="/cheil/admin/trgmapping/add-mapping"
-            className="flex flex-row p-2 border-2 border-gray-400 items-center rounded-md bg-[#2b2b2b] gap-1"
+            // href="/fantasy/admin/trgmapping/add-mapping"
+            className="flex flex-row p-2 border-2 border-gray-400 text-center cursor-pointer items-center rounded-md bg-[#2b2b2b] gap-1"
           >
             <span className="text-white text-xs">Upload</span>
           </Link>
@@ -122,7 +122,7 @@ function ListingPageButtons({
 
         <div className="flex justify-center mt-4 space-x-3">
           {pageNumbers.map((pageNum) => (
-            <button
+            <div
               key={pageNum}
               className={`px-3 py-1 rounded ${
                 pageNum - 1 === count
@@ -135,7 +135,7 @@ function ListingPageButtons({
               }}
             >
               {pageNum}
-            </button>
+            </div>
           ))}
         </div>
       </div>

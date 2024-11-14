@@ -118,7 +118,7 @@ const AdminEditButton = ({ data = [], EditModal, handleCloseEdit, token, api }) 
       <div className="ml-[13%] mr-[1%] flex flex-col animate__animated animate__fadeInDownBig">
         <div className="flex w-full justify-between items-center bg-black text-white p-4 rounded-t-lg">
           <h2 id="modal-title" className="text-lg font-bold">Edit Details</h2>
-          <button onClick={handleCloseEdit} className="text-xl font-bold">x</button>
+          <div onClick={handleCloseEdit} className="text-xl font-bold">x</div>
         </div>
         <div className="bg-white w-[100%] rounded-b-lg overflow-hidden shadow-lg p-5">
           
@@ -144,18 +144,18 @@ const AdminEditButton = ({ data = [], EditModal, handleCloseEdit, token, api }) 
           </div>
 
           <div className="flex gap-4 items-center w-full flex-row justify-end p-4">
-            <button
+            <div
               onClick={handleCloseEdit}
               className="border p-2 rounded-md text-xs w-[70px] bg-[#2b2b2b] text-white text-center"
             >
               Cancel
-            </button>
-            <button
+            </div>
+            <div
               onClick={handleSave}
               className="border p-2 rounded-md text-xs w-[70px] text-white bg-[#cc0001] text-center"
             >
               Save
-            </button>
+            </div>
           </div>
         </div>
       </div>

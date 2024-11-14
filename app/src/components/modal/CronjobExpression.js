@@ -42,18 +42,18 @@ const CronjobExpression = ({ isOpen, setIsModalOpen }) => {
       />
     </div>
     <div className="flex justify-end space-x-4 mt-6">
-            <button
+            <div
               onClick={closeModal}
               className="bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400"
             >
               Cancel
-            </button>
-            <button
+            </div>
+            <div
               onClick={() => setIsModalOpen(false)} // Submit or handle data on close
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
             >
               Confirm
-            </button>
+            </div>
           </div>
         </div>
       </div>

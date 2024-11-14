@@ -4,6 +4,7 @@ import { Modal } from "@mui/material";
 import { MdOutlineEdit } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
 
 const DetailsSideModal = ({
   open,
@@ -13,6 +14,7 @@ const DetailsSideModal = ({
   editnewroutepath, // Pass edit route path as a prop
 }) => {
   const router = useRouter(); // Initialize the router
+  const dispatch = useDispatch();
 
   const formatValue = (key, value) => {
     if (typeof value === "boolean") {
@@ -50,24 +52,24 @@ const DetailsSideModal = ({
 
   return (
     <Modal open={open} onClose={handleClose}>
-      <div className="max-w-lg m-3 flex flex-col justify-center items-end max-h-[96%] ml-[60%]">
-        <div className="bg-black rounded-md p-2 w-full text-white text-md flex flex-row justify-between">
+      <div className="max-w-lg m-3 flex flex-col  justify-center items-end max-h-[96%] ml-[60%]">
+        <div className="bg-black rounded-t-md p-2 w-full text-white text-md flex flex-row justify-between">
           <div className="text-white font-bold text-md">
             <p>{cuurentpagemodelname}</p>
           </div>
           <div className="flex flex-row gap-5">
             {/* Edit Icon Button */}
-            <button
-              onClick={() => router.push(`/cheil${editnewroutepath}`)} // Navigate to edit page
-              className="text-white"
+            <div
+              onClick={() => router.push(`/fantasy${editnewroutepath}`)} // Navigate to edit page
+              className="text-white cursor-pointer"
             >
               <MdOutlineEdit className="text-white rounded-md text-xl" />
-            </button>
+            </div>
 
             {/* Close Button */}
-            <button onClick={handleClose} className="text-white">
+            <div onClick={handleClose} className="text-white cursor-pointer">
               <IoClose className="text-xl" />
-            </button>
+            </div>
           </div>
         </div>
         <div className="bg-gray-200 w-full min-h-[96%] max-h-[96%] overflow-y-scroll relative">
